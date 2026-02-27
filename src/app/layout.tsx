@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { Providers } from './providers';
+
 import './globals.css';
 
 const geistSans = Geist({
@@ -17,8 +19,6 @@ export const metadata: Metadata = {
   description:
     'Open-source assistant for structured intake in primary care, with local-first data handling.',
 };
-
-import { Providers } from './providers';
 
 export default function RootLayout({
   children,

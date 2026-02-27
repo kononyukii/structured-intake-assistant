@@ -16,7 +16,14 @@ export default function Home() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pt-4">
           <div className="space-y-2">
+            <label
+              htmlFor="intake-overview"
+              className="text-sm leading-none font-medium"
+            >
+              Overview
+            </label>
             <Input
+              id="intake-overview"
               placeholder="Describe symptoms, concerns, medications, and history."
               className="w-full"
             />
