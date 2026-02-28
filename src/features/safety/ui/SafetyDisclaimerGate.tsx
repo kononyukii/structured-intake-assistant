@@ -70,7 +70,7 @@ export function SafetyDisclaimerGate() {
             </ul>
           </div>
 
-          <div className="border-destructive/20 bg-destructive/5 text-destructive-foreground rounded-lg border p-4">
+          <div className="border-destructive/20 bg-destructive/5 text-destructive rounded-lg border p-4">
             <p className="font-bold">{t('disclaimer.important')}</p>
             <p>{t('disclaimer.emergency')}</p>
           </div>
