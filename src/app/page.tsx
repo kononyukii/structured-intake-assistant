@@ -1,6 +1,7 @@
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -28,9 +29,11 @@ export default function Home() {
               className="w-full"
             />
           </div>
-          <Button className="w-full" size="lg">
-            Get Started
-          </Button>
+          <Link href="/intake" className="w-full">
+            <Button className="w-full" size="lg">
+              Get Started
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </main>
