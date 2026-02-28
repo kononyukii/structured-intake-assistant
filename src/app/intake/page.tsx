@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from '@/shared/i18n';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
