@@ -1,9 +1,10 @@
 'use client';
 
-import { i18n } from '@/shared/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
+
+import { i18n } from '@/shared/i18n';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

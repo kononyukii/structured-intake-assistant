@@ -1,9 +1,10 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useTranslation } from '@/shared/i18n';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import Link from 'next/link';
 
 export default function IntakePage() {
   const { t } = useTranslation();

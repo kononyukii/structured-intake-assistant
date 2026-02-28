@@ -1,10 +1,11 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useTranslation } from '@/shared/i18n';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
-import Link from 'next/link';
 
 export default function Home() {
   const { t } = useTranslation();

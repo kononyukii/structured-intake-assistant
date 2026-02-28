@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 import { disclaimerRepository } from '../data/disclaimer-repository';
 import { isAccepted } from '../domain/disclaimer';
 
