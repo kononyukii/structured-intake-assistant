@@ -1,5 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { useTranslation } from '@/shared/i18n';
 import { Button } from '@/shared/ui/button';
 import {
@@ -10,8 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/card';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+
 import { disclaimerRepository } from '../data/disclaimer-repository';
 
 export function SafetyDisclaimerGate() {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isAccepted, type DisclaimerAcceptance } from './disclaimer';
+
+import { type DisclaimerAcceptance,isAccepted } from './disclaimer';
 
 describe('isAccepted', () => {
   it('should return true if accepted is true', () => {
