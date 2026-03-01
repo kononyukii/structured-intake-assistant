@@ -8,7 +8,6 @@ import { Button } from '@/shared/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -46,68 +45,62 @@ export function SafetyDisclaimerGate() {
         </span>
       </PageHeader>
 
-      <PageBody className="max-w-3xl py-12">
-        <Card className="border-t-primary border-t-4 shadow-xl">
-          <CardHeader className="space-y-1">
+      <PageBody className="flex items-center justify-center py-12">
+        <Card className="w-full max-w-lg shadow-lg">
+          <CardHeader>
             <CardTitle className="text-2xl font-bold">
               {t('disclaimer.title')}
             </CardTitle>
-            <CardDescription>{t('disclaimer.description')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 text-sm leading-relaxed">
-            <div className="bg-muted/50 space-y-3 rounded-lg p-4">
-              <ul className="text-muted-foreground list-disc space-y-2 pl-5 text-base">
-                <li>
-                  <strong>{t('disclaimer.point2Title')}</strong>{' '}
-                  {t('disclaimer.point2Content')}
-                </li>
-                <li>
-                  <strong>{t('disclaimer.point3Title')}</strong>{' '}
-                  {t('disclaimer.point3Content')}
-                </li>
-                <li>
-                  <strong>{t('disclaimer.point4Title')}</strong>{' '}
-                  {t('disclaimer.point4Content')}
-                </li>
-              </ul>
+          <CardContent className="space-y-6">
+            <ul className="text-muted-foreground list-disc space-y-3 pl-5 text-sm">
+              <li>
+                <strong>{t('disclaimer.point2Title')}</strong>{' '}
+                {t('disclaimer.point2Content')}
+              </li>
+              <li>
+                <strong>{t('disclaimer.point3Title')}</strong>{' '}
+                {t('disclaimer.point3Content')}
+              </li>
+              <li>
+                <strong>{t('disclaimer.point4Title')}</strong>{' '}
+                {t('disclaimer.point4Content')}
+              </li>
+              <li>
+                <strong>{t('disclaimer.point5Title')}</strong>{' '}
+                {t('disclaimer.point5Content')}
+              </li>
+            </ul>
+
+            <div className="text-destructive text-sm font-medium">
+              {t('disclaimer.emergency')}
             </div>
 
-            <div className="border-destructive/20 bg-destructive/5 text-destructive rounded-lg border p-4 text-base">
-              <p className="font-bold">{t('disclaimer.important')}</p>
-              <p>{t('disclaimer.emergency')}</p>
-            </div>
-
-            <div className="flex items-center space-x-3 pt-4">
+            <div className="flex items-center space-x-3 pt-2">
               <input
                 type="checkbox"
                 id="disclaimer-check"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="text-primary focus:ring-primary h-5 w-5 cursor-pointer rounded border-gray-300"
+                className="h-4 w-4 rounded border-gray-300"
               />
               <label
                 htmlFor="disclaimer-check"
-                className="cursor-pointer text-sm leading-none font-medium select-none"
+                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {t('disclaimer.checkbox')}
               </label>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-3 pt-2 sm:flex-row">
+          <CardFooter className="flex flex-col gap-3">
             <Button
-              className="h-12 w-full text-lg sm:flex-1"
-              size="lg"
+              className="w-full"
               disabled={!agreed}
               onClick={handleContinue}
             >
               {t('disclaimer.continueBtn')}
             </Button>
-            <Button
-              variant="outline"
-              className="h-12 w-full px-8 text-lg sm:w-auto"
-              size="lg"
-              onClick={handleExit}
-            >
+            <Button variant="outline" className="w-full" onClick={handleExit}>
               {t('common.exit')}
             </Button>
           </CardFooter>
