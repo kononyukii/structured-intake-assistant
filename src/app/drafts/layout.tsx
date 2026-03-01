@@ -1,6 +1,6 @@
 import { DisclaimerGuard } from '@/features/safety/ui/DisclaimerGuard';
 
-export default function IntakeLayout({
+export default function DraftsLayout({
   children,
 }: {
   children: React.ReactNode;
