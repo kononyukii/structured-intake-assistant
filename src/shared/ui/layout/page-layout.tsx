@@ -71,3 +71,8 @@ export function PageFooter({ children, className, ...props }: PageFooterProps) {
     </footer>
   );
 }
+export * from './HeroSection';
+export * from './InfoCard';
+export * from './PageContainer';
+export * from './Section';
+export * from './TrustBadges';

@@ -7,13 +7,16 @@ import { draftsRepository } from '@/features/drafts/data/drafts-repository';
 import { disclaimerRepository } from '@/features/safety/data/disclaimer-repository';
 import { isAccepted } from '@/features/safety/domain/disclaimer';
 import { useTranslation } from '@/shared/i18n';
-import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import {
+  HeroSection,
   Page,
   PageBody,
+  PageContainer,
   PageFooter,
   PageHeader,
+  Section,
+  TrustBadges,
 } from '@/shared/ui/layout/page-layout';
 
 export default function Home() {
@@ -39,63 +42,43 @@ export default function Home() {
         </span>
       </PageHeader>
 
-      <PageBody className="flex flex-col items-center justify-center space-y-12 py-12 lg:py-24">
-        {/* Hero Section */}
-        <div className="max-w-3xl space-y-6 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-            {t('home.title')}
-          </h1>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-xl sm:text-2xl">
-            {t('home.description')}
-          </p>
-        </div>
+      <PageBody>
+        <PageContainer>
+          <HeroSection
+            title={t('home.title')}
+            subtitle={t('home.description')}
+            badges={<TrustBadges />}
+            actions={
+              <>
+                <Link href={getStartedHref} className="flex-1">
+                  <Button
+                    className="h-14 w-full text-lg font-semibold"
+                    size="lg"
+                  >
+                    {t('home.getStarted')}
+                  </Button>
+                </Link>
+                {hasDrafts && (
+                  <Link href="/drafts" className="flex-1">
+                    <Button
+                      variant="outline"
+                      className="h-14 w-full text-lg font-semibold"
+                      size="lg"
+                    >
+                      {t('home.continue')}
+                    </Button>
+                  </Link>
+                )}
+              </>
+            }
+          />
 
-        {/* Trust Chips Block */}
-        <div className="flex flex-wrap justify-center gap-3">
-          <Badge
-            variant="secondary"
-            className="bg-muted/50 hover:bg-muted/80 px-4 py-1.5 text-sm font-medium transition-colors"
-          >
-            {t('home.trust.noAccount')}
-          </Badge>
-          <Badge
-            variant="secondary"
-            className="bg-muted/50 hover:bg-muted/80 px-4 py-1.5 text-sm font-medium transition-colors"
-          >
-            {t('home.trust.localOnly')}
-          </Badge>
-          <Badge
-            variant="secondary"
-            className="bg-muted/50 hover:bg-muted/80 px-4 py-1.5 text-sm font-medium transition-colors"
-          >
-            {t('home.trust.noTracking')}
-          </Badge>
-        </div>
-
-        {/* CTA Row */}
-        <div className="flex w-full max-w-md flex-col gap-4 sm:flex-row">
-          <Link href={getStartedHref} className="flex-1">
-            <Button className="h-14 w-full text-lg font-semibold" size="lg">
-              {t('home.getStarted')}
-            </Button>
-          </Link>
-          {hasDrafts && (
-            <Link href="/drafts" className="flex-1">
-              <Button
-                variant="outline"
-                className="h-14 w-full text-lg font-semibold"
-                size="lg"
-              >
-                {t('home.continue')}
-              </Button>
-            </Link>
-          )}
-        </div>
-
-        {/* Optional: Minimal "Does not do" note to ensure no medical claims */}
-        <div className="text-muted-foreground max-w-md text-center text-sm italic">
-          <p>{t('disclaimer.point2Content')}</p>
-        </div>
+          <Section className="flex flex-col items-center">
+            <div className="text-muted-foreground max-w-md text-center text-sm italic">
+              <p>{t('disclaimer.point2Content')}</p>
+            </div>
+          </Section>
+        </PageContainer>
       </PageBody>
 
       <PageFooter>

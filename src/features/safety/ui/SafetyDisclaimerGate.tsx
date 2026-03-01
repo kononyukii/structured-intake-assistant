@@ -6,15 +6,11 @@ import { useState } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import { Button } from '@/shared/ui/button';
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/shared/ui/card';
-import {
+  HeroSection,
+  InfoCard,
   Page,
   PageBody,
+  PageContainer,
   PageFooter,
   PageHeader,
 } from '@/shared/ui/layout/page-layout';
@@ -45,66 +41,69 @@ export function SafetyDisclaimerGate() {
         </span>
       </PageHeader>
 
-      <PageBody className="flex items-center justify-center py-12">
-        <Card className="w-full max-w-lg shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              {t('disclaimer.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <ul className="text-muted-foreground list-disc space-y-3 pl-5 text-sm">
-              <li>
-                <strong>{t('disclaimer.point2Title')}</strong>{' '}
-                {t('disclaimer.point2Content')}
-              </li>
-              <li>
-                <strong>{t('disclaimer.point3Title')}</strong>{' '}
-                {t('disclaimer.point3Content')}
-              </li>
-              <li>
-                <strong>{t('disclaimer.point4Title')}</strong>{' '}
-                {t('disclaimer.point4Content')}
-              </li>
-              <li>
-                <strong>{t('disclaimer.point5Title')}</strong>{' '}
-                {t('disclaimer.point5Content')}
-              </li>
-            </ul>
+      <PageBody>
+        <PageContainer className="flex max-w-2xl flex-col items-center">
+          <HeroSection
+            className="py-8 lg:py-12"
+            title={t('disclaimer.title')}
+          />
 
-            <div className="text-destructive text-sm font-medium">
-              {t('disclaimer.emergency')}
+          <InfoCard className="w-full shadow-lg">
+            <div className="space-y-6">
+              <ul className="text-muted-foreground list-disc space-y-3 pl-5 text-sm">
+                <li>
+                  <strong>{t('disclaimer.point2Title')}</strong>{' '}
+                  {t('disclaimer.point2Content')}
+                </li>
+                <li>
+                  <strong>{t('disclaimer.point3Title')}</strong>{' '}
+                  {t('disclaimer.point3Content')}
+                </li>
+                <li>
+                  <strong>{t('disclaimer.point4Title')}</strong>{' '}
+                  {t('disclaimer.point4Content')}
+                </li>
+                <li>
+                  <strong>{t('disclaimer.point5Title')}</strong>{' '}
+                  {t('disclaimer.point5Content')}
+                </li>
+              </ul>
+
+              <div className="text-destructive text-sm font-medium">
+                {t('disclaimer.emergency')}
+              </div>
+
+              <div className="flex items-center space-x-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="disclaimer-check"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <label
+                  htmlFor="disclaimer-check"
+                  className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {t('disclaimer.checkbox')}
+                </label>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-3 pt-2">
-              <input
-                type="checkbox"
-                id="disclaimer-check"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <label
-                htmlFor="disclaimer-check"
-                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            <div className="mt-8 flex flex-col gap-3">
+              <Button
+                className="w-full"
+                disabled={!agreed}
+                onClick={handleContinue}
               >
-                {t('disclaimer.checkbox')}
-              </label>
+                {t('disclaimer.continueBtn')}
+              </Button>
+              <Button variant="outline" className="w-full" onClick={handleExit}>
+                {t('common.exit')}
+              </Button>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button
-              className="w-full"
-              disabled={!agreed}
-              onClick={handleContinue}
-            >
-              {t('disclaimer.continueBtn')}
-            </Button>
-            <Button variant="outline" className="w-full" onClick={handleExit}>
-              {t('common.exit')}
-            </Button>
-          </CardFooter>
-        </Card>
+          </InfoCard>
+        </PageContainer>
       </PageBody>
 
       <PageFooter>
