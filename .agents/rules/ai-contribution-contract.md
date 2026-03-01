@@ -53,6 +53,7 @@ You are contributing to **Structured Intake Assistant for Primary Care**, a prod
 
 - Use **shadcn/ui** components as the base.
 - Use Tailwind v4 **design tokens** (avoid random magic values).
+- **Follow `docs/ui/WIREFRAME_SPEC.md` and `docs/ui/assets/wireframes-v3.png` strictly for all UI work.**
 - **Do not introduce new colors/spacing scales.** Reuse existing tokens and shadcn variants.
 - Prefer `cn()` for class composition.
 - For screen-level UI, add **empty state** and **loading state**.
@@ -97,6 +98,7 @@ Before starting any task, you **must** read the following documents to ensure al
 
 1. `docs/spec-v1.md`: Full MVP spec and invariants.
 2. `docs/adr/001-product-scope.md`: Frozen product scope and safety boundaries.
-3. `docs/glossary.md`: Standardized terminology.
+3. `docs/ui/WIREFRAME_SPEC.md`: UI/UX baseline and screen specs.
+4. `docs/glossary.md`: Standardized terminology.
 
-These documents are the **source of truth** for all feature, safety, and architectural decisions.
+These documents are the **source of truth** for all feature, safety, architectural, and design decisions.
