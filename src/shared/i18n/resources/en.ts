@@ -8,7 +8,7 @@ export const en = {
   },
   home: {
     title: 'Structured Intake Assistant for Primary Care',
-    description: 'Organize intake information before a primary care visit.',
+    description: 'Prepare a structured summary for your primary care visit.',
     overview: 'Overview',
     placeholder: 'Describe symptoms, concerns, medications, and history.',
     getStarted: 'Get Started',
