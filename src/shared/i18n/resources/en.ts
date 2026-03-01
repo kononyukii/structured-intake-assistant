@@ -12,6 +12,13 @@ export const en = {
     overview: 'Overview',
     placeholder: 'Describe symptoms, concerns, medications, and history.',
     getStarted: 'Get Started',
+    continue: 'Continue',
+    trust: {
+      noAccount: 'No account',
+      localOnly: 'Local-only storage',
+      noTracking: 'No tracking',
+    },
+    footerNote: 'Data stays on this device.',
   },
   disclaimer: {
     title: 'Safety Disclaimer & Agreement',
