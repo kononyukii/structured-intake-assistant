@@ -12,7 +12,7 @@ Product context for this repository:
 
 When asked to implement a task:
 
-1. **Initialize Context**: Always read `docs/spec-v1.md` and `docs/adr/001-product-scope.md` before defining scope or inspecting code.
+1. **Initialize Context**: Always read `docs/spec-v1.md`, `docs/adr/001-product-scope.md`, and `docs/ui/WIREFRAME_SPEC.md` before defining scope or inspecting code.
 2. **Define scope** as one PR-sized change (minimal viable improvement).
 3. **Choose correct layer** (`app` / `features` / `entities` / `shared`) and do not violate boundaries.
 4. **Inspect existing code first** and reuse existing patterns/utilities/components.
