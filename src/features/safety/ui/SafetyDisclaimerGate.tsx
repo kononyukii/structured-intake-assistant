@@ -22,7 +22,7 @@ export function SafetyDisclaimerGate() {
   const handleContinue = () => {
     if (agreed) {
       disclaimerRepository.setDisclaimerStatus(true);
-      router.push('/intake');
+      router.push('/start');
     }
   };
 

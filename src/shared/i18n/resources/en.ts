@@ -46,6 +46,32 @@ export const en = {
     checkbox: 'I understand and agree',
     continueBtn: 'Continue',
   },
+  unsupported: {
+    title: 'Unsupported Scenario',
+    description:
+      'This tool is not appropriate for the current scenario.',
+    limits: {
+      adultPrimaryCare: 'This tool is designed for adult (18+) primary care.',
+      pregnancy: 'It does not handle pregnancy or obstetric contexts.',
+      emergency: 'It is not suitable for urgent or emergency situations.',
+    },
+    returnHome: 'Return to Home',
+  },
+  start: {
+    title: 'Before You Start',
+    description: 'Please answer a few quick scope questions before intake.',
+    fields: {
+      pregnancy:
+        'Is this related to pregnancy or obstetric concerns?',
+      emergency: 'Is this an urgent or emergency situation?',
+      adultConfirmation: 'I confirm that I am 18 years old or older.',
+    },
+    options: {
+      yes: 'Yes',
+      no: 'No',
+    },
+    continue: 'Continue to Intake',
+  },
   wizard: {
     title: 'Intake Wizard',
     next: 'Next',

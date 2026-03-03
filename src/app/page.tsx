@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 
+import { scopeGateRepository } from '@/features/safety/data/scope-gate-repository';
 import { useTranslation } from '@/shared/i18n';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -16,6 +18,10 @@ import {
 
 export default function Home() {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    scopeGateRepository.clearScopeGateStatus();
+  }, []);
 
   return (
     <AppFrame width="wide">
@@ -58,7 +64,7 @@ export default function Home() {
                     size="lg"
                     className="h-12 w-full border-slate-200 bg-white px-5 text-base text-slate-700 shadow-none sm:w-auto"
                   >
-                    <Link href="/intake" className="inline-flex items-center gap-2">
+                    <Link href="/start" className="inline-flex items-center gap-2">
                       {t('home.continue')}
                       <ChevronRightIcon className="size-4" />
                     </Link>
