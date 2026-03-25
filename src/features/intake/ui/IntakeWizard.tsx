@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect } from 'react';
 
+import { useIntakeWizardStore } from '@/features/intake/data/intake-wizard-store';
 import { useTranslation } from '@/shared/i18n';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -17,82 +18,120 @@ import {
 import { QuestionCard } from './QuestionCard';
 import { WizardProgress } from './WizardProgress';
 
-type DemoStep = {
-  id: string;
-  title: string;
-  description?: string;
-  fieldType: 'text' | 'textarea';
-  placeholder: string;
-};
-
-const demoSteps: DemoStep[] = [
-  {
-    id: 'mainConcern',
-    title: 'What is your main concern today?',
-    description: 'Share the main reason for your visit in your own words.',
-    fieldType: 'textarea',
-    placeholder: 'Describe your concern...',
-  },
-  {
-    id: 'onset',
-    title: 'When did this start?',
-    description: 'You can use a date or a general timeframe.',
-    fieldType: 'text',
-    placeholder: 'e.g., 3 days ago',
-  },
-  {
-    id: 'symptoms',
-    title: 'Which symptoms feel most noticeable right now?',
-    description: 'List the key symptoms you want to mention first.',
-    fieldType: 'textarea',
-    placeholder: 'Describe your symptoms...',
-  },
-  {
-    id: 'notes',
-    title: 'Anything else you want your clinician to know?',
-    description: 'Optional details you want to include in the intake summary.',
-    fieldType: 'textarea',
-    placeholder: 'Add any extra context...',
-  },
-];
-
 export function IntakeWizard() {
   const router = useRouter();
   const { t } = useTranslation();
+  const {
+    currentQuestion,
+    currentQuestionId,
+    currentPhaseIndex,
+    totalPhaseCount,
+    draftCurrentInput,
+    canGoBack,
+    canGoNext,
+    initializeWizard,
+    saveAnswer,
+    goBack,
+    goNext,
+    saveAndExit,
+  } = useIntakeWizardStore((state) => state);
 
-  const [stepIndex, setStepIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  const currentStep = demoSteps[stepIndex];
-  const totalSteps = demoSteps.length;
-  const isFirstStep = stepIndex === 0;
-  const isLastStep = stepIndex === totalSteps - 1;
+  useEffect(() => {
+    initializeWizard();
+  }, [initializeWizard]);
 
   const handleBack = () => {
-    if (isFirstStep) {
-      return;
-    }
-
-    setStepIndex((prev) => prev - 1);
+    goBack();
   };
 
   const handleNext = () => {
-    if (isLastStep) {
-      return;
-    }
-
-    setStepIndex((prev) => prev + 1);
+    goNext();
   };
 
   const handleSaveExit = () => {
+    saveAndExit();
     router.push('/drafts');
   };
 
-  const handleAnswerChange = (value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [currentStep.id]: value,
-    }));
+  const renderQuestionInput = () => {
+    if (!currentQuestion || !currentQuestionId) {
+      return (
+        <p className="text-sm text-slate-600">
+          {t('wizard.completeDescription')}
+        </p>
+      );
+    }
+
+    switch (currentQuestion.type) {
+      case 'free_text':
+        if (currentQuestion.multiline) {
+          return (
+            <textarea
+              id={currentQuestionId}
+              value={typeof draftCurrentInput === 'string' ? draftCurrentInput : ''}
+              onChange={(event) => saveAnswer(event.target.value)}
+              maxLength={currentQuestion.maxLength}
+              className="min-h-36 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          );
+        }
+
+        return (
+          <Input
+            id={currentQuestionId}
+            value={typeof draftCurrentInput === 'string' ? draftCurrentInput : ''}
+            onChange={(event) => saveAnswer(event.target.value)}
+            maxLength={currentQuestion.maxLength}
+            className="h-11 border-slate-300 bg-white text-base"
+          />
+        );
+      case 'date':
+        return (
+          <Input
+            id={currentQuestionId}
+            type="date"
+            value={typeof draftCurrentInput === 'string' ? draftCurrentInput : ''}
+            onChange={(event) => saveAnswer(event.target.value)}
+            className="h-11 border-slate-300 bg-white text-base"
+          />
+        );
+      case 'boolean': {
+        const currentValue =
+          draftCurrentInput === 'yes' ||
+          draftCurrentInput === 'no' ||
+          draftCurrentInput === 'unknown'
+            ? draftCurrentInput
+            : null;
+
+        return (
+          <fieldset className="space-y-3">
+            <legend className="sr-only">{currentQuestion.prompt}</legend>
+            {[
+              { value: 'yes', label: t('start.options.yes') },
+              { value: 'no', label: t('start.options.no') },
+              { value: 'unknown', label: t('wizard.unknown') },
+            ].map((option) => (
+              <label
+                key={option.value}
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+              >
+                <input
+                  type="radio"
+                  name={currentQuestionId}
+                  value={option.value}
+                  checked={currentValue === option.value}
+                  onChange={(event) => saveAnswer(event.target.value)}
+                  className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </fieldset>
+        );
+      }
+      default:
+        return null;
+    }
   };
 
   return (
@@ -102,29 +141,18 @@ export function IntakeWizard() {
 
         <WindowContent className="flex-1">
           <div className="mx-auto w-full max-w-xl space-y-6">
-            <WizardProgress currentStep={stepIndex + 1} totalSteps={totalSteps} />
+            <WizardProgress currentStep={currentPhaseIndex} totalSteps={totalPhaseCount} />
 
-            <QuestionCard title={currentStep.title} description={currentStep.description}>
-              <label htmlFor={currentStep.id} className="sr-only">
-                {currentStep.title}
-              </label>
-              {currentStep.fieldType === 'text' ? (
-                <Input
-                  id={currentStep.id}
-                  value={answers[currentStep.id] ?? ''}
-                  onChange={(event) => handleAnswerChange(event.target.value)}
-                  placeholder={currentStep.placeholder}
-                  className="h-11 border-slate-300 bg-white text-base"
-                />
-              ) : (
-                <textarea
-                  id={currentStep.id}
-                  value={answers[currentStep.id] ?? ''}
-                  onChange={(event) => handleAnswerChange(event.target.value)}
-                  placeholder={currentStep.placeholder}
-                  className="min-h-36 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              )}
+            <QuestionCard
+              title={currentQuestion?.prompt ?? t('wizard.completeTitle')}
+              description={currentQuestion?.description}
+            >
+              {currentQuestionId && currentQuestion?.type !== 'boolean' ? (
+                <label htmlFor={currentQuestionId} className="sr-only">
+                  {currentQuestion?.prompt}
+                </label>
+              ) : null}
+              {renderQuestionInput()}
             </QuestionCard>
           </div>
         </WindowContent>
@@ -146,7 +174,7 @@ export function IntakeWizard() {
                 variant="outline"
                 className="h-11 w-full border-slate-300 md:w-auto"
                 onClick={handleBack}
-                disabled={isFirstStep}
+                disabled={!canGoBack}
               >
                 {t('wizard.back')}
               </Button>
@@ -154,7 +182,7 @@ export function IntakeWizard() {
                 type="button"
                 className="h-11 w-full bg-blue-600 text-white hover:bg-blue-700 md:w-auto"
                 onClick={handleNext}
-                disabled={isLastStep}
+                disabled={!canGoNext}
               >
                 {t('wizard.next')}
               </Button>
