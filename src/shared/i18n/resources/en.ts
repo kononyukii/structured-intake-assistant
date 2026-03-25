@@ -77,6 +77,10 @@ export const en = {
     next: 'Next',
     back: 'Back',
     saveExit: 'Save & Exit',
+    unknown: 'Not sure',
+    completeTitle: 'Intake complete',
+    completeDescription:
+      'You have answered the current intake questions. You can go back or save and exit.',
     placeholder:
       'This is a placeholder for the structured intake wizard (Roadmap Item #5).',
     backHome: 'Back to Home',
