@@ -48,8 +48,7 @@ export const en = {
   },
   unsupported: {
     title: 'Unsupported Scenario',
-    description:
-      'This tool is not appropriate for the current scenario.',
+    description: 'This tool is not appropriate for the current scenario.',
     limits: {
       adultPrimaryCare: 'This tool is designed for adult (18+) primary care.',
       pregnancy: 'It does not handle pregnancy or obstetric contexts.',
@@ -61,8 +60,7 @@ export const en = {
     title: 'Before You Start',
     description: 'Please answer a few quick scope questions before intake.',
     fields: {
-      pregnancy:
-        'Is this related to pregnancy or obstetric concerns?',
+      pregnancy: 'Is this related to pregnancy or obstetric concerns?',
       emergency: 'Is this an urgent or emergency situation?',
       adultConfirmation: 'I confirm that I am 18 years old or older.',
     },
@@ -77,6 +75,11 @@ export const en = {
     next: 'Next',
     back: 'Back',
     saveExit: 'Save & Exit',
+    startFresh: 'Start fresh',
+    autosaved: 'Autosaved locally',
+    loadingTitle: 'Loading saved draft',
+    loadingDescription: 'Checking this device for your latest intake draft.',
+    loadingBody: 'Please wait while your draft is restored.',
     unknown: 'Not sure',
     completeTitle: 'Intake complete',
     completeDescription:

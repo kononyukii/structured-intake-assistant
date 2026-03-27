@@ -16,15 +16,18 @@ import {
   getNextBestQuestion,
   isQuestionAnswered,
 } from '@/features/intake/domain/next-question-selector';
-import {
-  type Question,
-} from '@/features/intake/domain/question-answer-contracts';
+import { type Question } from '@/features/intake/domain/question-answer-contracts';
 
 import {
   applyAnswerToSession,
   getDraftAnswerForQuestion,
   type IntakeWizardDraftValue,
 } from './apply-answer-to-session';
+import {
+  type IntakeDraftRepository,
+  intakeDraftRepository,
+  type LoadDraftResult,
+} from './intake-draft-repository';
 
 type IntakeWizardHistoryItem = {
   phase: IntakePhase;
@@ -43,21 +46,32 @@ type IntakeWizardState = {
   totalPhaseCount: number;
   canGoBack: boolean;
   canGoNext: boolean;
+  hasInitialized: boolean;
+  isHydrating: boolean;
+  draftStatus: LoadDraftResult['status'] | 'idle';
+  draftRecoveryMessage: string | null;
 };
 
+type IntakeWizardSnapshot = Omit<
+  IntakeWizardState,
+  'hasInitialized' | 'isHydrating' | 'draftStatus' | 'draftRecoveryMessage'
+>;
+
 type IntakeWizardActions = {
-  initializeWizard: () => void;
+  initializeWizard: () => Promise<void>;
   saveAnswer: (rawValue: IntakeWizardDraftValue) => void;
   goBack: () => void;
   goNext: () => void;
   saveAndExit: () => void;
-  resetWizard: () => void;
+  resetWizard: () => Promise<void>;
 };
 
 export type IntakeWizardStore = IntakeWizardState & IntakeWizardActions;
 
 const QUESTION_BY_ID = new Map(
-  INTAKE_QUESTION_CATALOG.map((entry) => [entry.question.id, entry.question] as const),
+  INTAKE_QUESTION_CATALOG.map(
+    (entry) => [entry.question.id, entry.question] as const
+  )
 );
 
 function getQuestionById(questionId: string | null): Question | null {
@@ -73,7 +87,7 @@ function createWizardSnapshot(params: {
   currentPhase: IntakePhase;
   currentQuestionId: string | null;
   history: IntakeWizardHistoryItem[];
-}): IntakeWizardState {
+}): IntakeWizardSnapshot {
   const currentQuestion = getQuestionById(params.currentQuestionId);
   const askedQuestionIds = params.history.map((item) => item.questionId);
 
@@ -89,14 +103,40 @@ function createWizardSnapshot(params: {
       : null,
     currentPhaseIndex: getPhaseIndex(params.currentPhase) + 1,
     totalPhaseCount: getTotalPhaseCount(),
-    canGoBack: currentQuestion ? params.history.length > 1 : params.history.length > 0,
+    canGoBack: currentQuestion
+      ? params.history.length > 1
+      : params.history.length > 0,
     canGoNext: currentQuestion
       ? isQuestionAnswered(params.session, currentQuestion.id)
       : false,
   };
 }
 
-function createInitialWizardState(): IntakeWizardState {
+function createStateWithPersistence(
+  snapshot: IntakeWizardSnapshot,
+  persistence: Pick<
+    IntakeWizardState,
+    'hasInitialized' | 'isHydrating' | 'draftStatus' | 'draftRecoveryMessage'
+  >
+): IntakeWizardState {
+  return {
+    ...snapshot,
+    ...persistence,
+  };
+}
+
+function createActiveDraftState(
+  snapshot: IntakeWizardSnapshot
+): IntakeWizardState {
+  return createStateWithPersistence(snapshot, {
+    hasInitialized: true,
+    isHydrating: false,
+    draftStatus: 'ready',
+    draftRecoveryMessage: null,
+  });
+}
+
+function createInitialWizardSnapshot(): IntakeWizardSnapshot {
   const session = createEmptyIntakeSession();
   const initialPhase = getInitialIntakePhase();
   const initialSelection = getNextBestQuestion(session, initialPhase);
@@ -125,8 +165,8 @@ function createInitialWizardState(): IntakeWizardState {
 
 function createReviewWizardState(
   session: IntakeSession,
-  history: IntakeWizardHistoryItem[],
-): IntakeWizardState {
+  history: IntakeWizardHistoryItem[]
+): IntakeWizardSnapshot {
   return createWizardSnapshot({
     session,
     currentPhase: 'review',
@@ -135,17 +175,137 @@ function createReviewWizardState(
   });
 }
 
-export function createIntakeWizardStore() {
+function createInitialWizardState(): IntakeWizardState {
+  return createStateWithPersistence(createInitialWizardSnapshot(), {
+    hasInitialized: false,
+    isHydrating: false,
+    draftStatus: 'idle',
+    draftRecoveryMessage: null,
+  });
+}
+
+function getDraftRecoveryMessage(
+  result: Extract<LoadDraftResult, { status: 'incompatible' | 'corrupt' }>
+): string {
+  return result.status === 'incompatible'
+    ? 'A saved draft from an older version could not be resumed. Start fresh to continue.'
+    : 'The saved draft on this device could not be resumed. Start fresh to continue.';
+}
+
+function createRestoredWizardState(
+  session: IntakeSession,
+  currentPhase?: IntakePhase
+): IntakeWizardSnapshot {
+  const targetSelection = getNextBestQuestion(
+    session,
+    currentPhase ?? getInitialIntakePhase()
+  );
+  let workingSession = createEmptyIntakeSession();
+  let workingPhase = getInitialIntakePhase();
+  const history: IntakeWizardHistoryItem[] = [];
+
+  while (true) {
+    const selection = getNextBestQuestion(
+      workingSession,
+      workingPhase,
+      history.map((item) => item.questionId)
+    );
+
+    if (!selection) {
+      return createReviewWizardState(session, history);
+    }
+
+    history.push({
+      phase: selection.phase,
+      questionId: selection.question.id,
+    });
+
+    if (
+      !isQuestionAnswered(session, selection.question.id) ||
+      selection.question.id === targetSelection?.question.id
+    ) {
+      return createWizardSnapshot({
+        session,
+        currentPhase: selection.phase,
+        currentQuestionId: selection.question.id,
+        history,
+      });
+    }
+
+    workingSession = applyAnswerToSession(
+      workingSession,
+      selection.question.id,
+      getDraftAnswerForQuestion(session, selection.question.id)
+    );
+
+    workingPhase = selection.phase;
+  }
+}
+
+type CreateIntakeWizardStoreOptions = {
+  draftRepository?: IntakeDraftRepository;
+};
+
+export function createIntakeWizardStore(
+  options: CreateIntakeWizardStoreOptions = {}
+) {
+  const draftRepository = options.draftRepository ?? intakeDraftRepository;
+
+  function persistDraft(session: IntakeSession, currentPhase: IntakePhase) {
+    void draftRepository.saveActiveDraft(session, { currentPhase });
+  }
+
   return createStore<IntakeWizardStore>()((set, get) => ({
     ...createInitialWizardState(),
-    initializeWizard: () => {
+    initializeWizard: async () => {
       const state = get();
 
-      if (state.currentQuestion || state.history.length > 0 || state.currentPhase === 'review') {
+      if (state.hasInitialized || state.isHydrating) {
         return;
       }
 
-      set(createInitialWizardState());
+      set({ isHydrating: true });
+
+      const result = await draftRepository.loadActiveDraft();
+
+      if (result.status === 'ready') {
+        set(
+          createStateWithPersistence(
+            createRestoredWizardState(
+              result.session,
+              result.meta?.currentPhase
+            ),
+            {
+              hasInitialized: true,
+              isHydrating: false,
+              draftStatus: 'ready',
+              draftRecoveryMessage: null,
+            }
+          )
+        );
+        return;
+      }
+
+      if (result.status === 'incompatible' || result.status === 'corrupt') {
+        set(
+          createStateWithPersistence(createInitialWizardSnapshot(), {
+            hasInitialized: true,
+            isHydrating: false,
+            draftStatus: result.status,
+            draftRecoveryMessage: getDraftRecoveryMessage(result),
+          })
+        );
+        return;
+      }
+
+      set(
+        createStateWithPersistence(createInitialWizardSnapshot(), {
+          hasInitialized: true,
+          isHydrating: false,
+          draftStatus: result.status,
+          draftRecoveryMessage: null,
+        })
+      );
     },
     saveAnswer: (rawValue) => {
       const state = get();
@@ -154,16 +314,24 @@ export function createIntakeWizardStore() {
         return;
       }
 
-      const nextSession = applyAnswerToSession(state.session, state.currentQuestionId, rawValue);
+      const nextSession = applyAnswerToSession(
+        state.session,
+        state.currentQuestionId,
+        rawValue
+      );
 
       set(
-        createWizardSnapshot({
-          session: nextSession,
-          currentPhase: state.currentPhase,
-          currentQuestionId: state.currentQuestionId,
-          history: state.history,
-        }),
+        createActiveDraftState(
+          createWizardSnapshot({
+            session: nextSession,
+            currentPhase: state.currentPhase,
+            currentQuestionId: state.currentQuestionId,
+            history: state.history,
+          })
+        )
       );
+
+      persistDraft(nextSession, state.currentPhase);
     },
     goBack: () => {
       const state = get();
@@ -180,13 +348,17 @@ export function createIntakeWizardStore() {
         }
 
         set(
-          createWizardSnapshot({
-            session: state.session,
-            currentPhase: previousQuestion.phase,
-            currentQuestionId: previousQuestion.questionId,
-            history: state.history,
-          }),
+          createActiveDraftState(
+            createWizardSnapshot({
+              session: state.session,
+              currentPhase: previousQuestion.phase,
+              currentQuestionId: previousQuestion.questionId,
+              history: state.history,
+            })
+          )
         );
+
+        persistDraft(state.session, previousQuestion.phase);
 
         return;
       }
@@ -199,13 +371,17 @@ export function createIntakeWizardStore() {
       }
 
       set(
-        createWizardSnapshot({
-          session: state.session,
-          currentPhase: previousQuestion.phase,
-          currentQuestionId: previousQuestion.questionId,
-          history: nextHistory,
-        }),
+        createActiveDraftState(
+          createWizardSnapshot({
+            session: state.session,
+            currentPhase: previousQuestion.phase,
+            currentQuestionId: previousQuestion.questionId,
+            history: nextHistory,
+          })
+        )
       );
+
+      persistDraft(state.session, previousQuestion.phase);
     },
     goNext: () => {
       const state = get();
@@ -217,40 +393,62 @@ export function createIntakeWizardStore() {
       const nextSelection = getNextBestQuestion(
         state.session,
         state.currentPhase,
-        state.askedQuestionIds,
+        state.askedQuestionIds
       );
 
       if (!nextSelection) {
-        set(createReviewWizardState(state.session, state.history));
+        set(
+          createActiveDraftState(
+            createReviewWizardState(state.session, state.history)
+          )
+        );
+        persistDraft(state.session, 'review');
         return;
       }
 
       set(
-        createWizardSnapshot({
-          session: state.session,
-          currentPhase: nextSelection.phase,
-          currentQuestionId: nextSelection.question.id,
-          history: [
-            ...state.history,
-            {
-              phase: nextSelection.phase,
-              questionId: nextSelection.question.id,
-            },
-          ],
-        }),
+        createActiveDraftState(
+          createWizardSnapshot({
+            session: state.session,
+            currentPhase: nextSelection.phase,
+            currentQuestionId: nextSelection.question.id,
+            history: [
+              ...state.history,
+              {
+                phase: nextSelection.phase,
+                questionId: nextSelection.question.id,
+              },
+            ],
+          })
+        )
       );
+
+      persistDraft(state.session, nextSelection.phase);
     },
     saveAndExit: () => {
-      set(createInitialWizardState());
+      const state = get();
+
+      persistDraft(state.session, state.currentPhase);
     },
-    resetWizard: () => {
-      set(createInitialWizardState());
+    resetWizard: async () => {
+      await draftRepository.deleteActiveDraft();
+
+      set(
+        createStateWithPersistence(createInitialWizardSnapshot(), {
+          hasInitialized: true,
+          isHydrating: false,
+          draftStatus: 'empty',
+          draftRecoveryMessage: null,
+        })
+      );
     },
   }));
 }
 
 export const intakeWizardStore = createIntakeWizardStore();
 
-export function useIntakeWizardStore<T>(selector: (state: IntakeWizardStore) => T): T {
+export function useIntakeWizardStore<T>(
+  selector: (state: IntakeWizardStore) => T
+): T {
   return useStore(intakeWizardStore, selector);
 }
