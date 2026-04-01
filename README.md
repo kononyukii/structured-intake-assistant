@@ -63,7 +63,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Copy `.env.example` to `.env` and set:
 
 - `AI_PROVIDER=mock` to keep the default mock path, or `AI_PROVIDER=gemini` to use Gemini server-side routes.
-- `AI_MODEL=gemini-2.5-flash-lite` when `AI_PROVIDER=gemini`.
+- `AI_MODEL=gemini-2.5-flash-lite` only when `AI_PROVIDER=gemini`.
 - `GEMINI_API_KEY=...` when `AI_PROVIDER=gemini`.
 
 If `AI_PROVIDER=gemini` is selected without a valid `AI_MODEL` or `GEMINI_API_KEY`, AI routes fail safely with a typed provider-unavailable result.

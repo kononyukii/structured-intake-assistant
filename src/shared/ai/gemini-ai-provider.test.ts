@@ -506,4 +506,16 @@ describe('getAiProviderConfigFromEnv', () => {
       kind: 'mock',
     });
   });
+
+  it('ignores AI_MODEL when AI_PROVIDER=mock', () => {
+    expect(
+      getAiProviderConfigFromEnv({
+        AI_PROVIDER: 'mock',
+        AI_MODEL: GEMINI_TEST_MODEL,
+        NODE_ENV: 'test',
+      } as NodeJS.ProcessEnv),
+    ).toEqual({
+      kind: 'mock',
+    });
+  });
 });

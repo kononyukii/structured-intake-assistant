@@ -1,3 +1,5 @@
+import 'server-only';
+
 import type { CreateAiProviderConfig } from './create-ai-provider';
 
 function normalizeOptionalString(value: string | undefined): string | undefined {
@@ -22,7 +24,6 @@ export function getAiProviderConfigFromEnv(
   if (providerKind === 'mock') {
     return {
       kind: 'mock',
-      model: normalizeOptionalString(env.AI_MODEL),
     };
   }
 
