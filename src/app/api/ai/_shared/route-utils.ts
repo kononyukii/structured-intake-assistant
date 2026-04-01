@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { getAiProviderConfigFromEnv } from '@/shared/ai/ai-config.server';
 import type { AiProvider } from '@/shared/ai/ai-provider';
 import type {
   AiProviderFailureReason,
@@ -76,7 +77,9 @@ export async function runAiRoute<TInput, TOutput>(
     return bodyResult.response;
   }
 
-  const createProvider = options.deps?.createProvider ?? createAiProvider;
+  const createProvider =
+    options.deps?.createProvider ??
+    (() => createAiProvider(getAiProviderConfigFromEnv()));
   const timeoutMs = options.deps?.timeoutMs ?? DEFAULT_AI_ROUTE_TIMEOUT_MS;
 
   try {
