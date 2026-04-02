@@ -8,6 +8,7 @@ import { createDoctorSummaryFixture } from '@/test/fixtures/summary-fixtures';
 import {
   createFreeTextNormalizationFallback,
   createSummaryRewriteFallback,
+  validateAiProviderOutput,
 } from './ai-provider';
 import { createAiProvider } from './create-ai-provider';
 import { MockAiProvider } from './mock-ai-provider';
@@ -263,6 +264,86 @@ describe('MockAiProvider', () => {
         operation: 'clarifying_question_generation',
         durationMs: 0,
       },
+    });
+  });
+
+  it('maps unsafe clarifying-question content into unsafe_response', () => {
+    const result = validateAiProviderOutput(
+      'clarifying_question_generation',
+      {
+        operation: 'clarifying_question_generation',
+        question: {
+          id: 'unsafe-question',
+          type: 'free_text',
+          prompt: 'You should take ibuprofen.',
+          multiline: true,
+        },
+      },
+      null,
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'unsafe_response',
+      fallback: null,
+      error: 'AI response violated output safety boundaries.',
+    });
+  });
+
+  it('maps unsafe normalization content into unsafe_response with a deterministic fallback', () => {
+    const fallback = createFreeTextNormalizationFallback();
+    const result = validateAiProviderOutput(
+      'free_text_normalization',
+      {
+        operation: 'free_text_normalization',
+        normalizedFields: [
+          {
+            fieldPath: 'chiefComplaint.summary',
+            value: {
+              kind: 'value',
+              value: 'This is likely pneumonia.',
+            },
+            confidence: 'high',
+          },
+        ],
+      },
+      fallback,
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'unsafe_response',
+      fallback,
+      error: 'AI response violated output safety boundaries.',
+    });
+  });
+
+  it('keeps deterministic summary fallback viable when unsafe rewrite content is blocked', () => {
+    const summary = createDoctorSummaryFixture();
+    const fallback = createSummaryRewriteFallback(summary);
+    const result = validateAiProviderOutput(
+      'summary_rewrite',
+      {
+        operation: 'summary_rewrite',
+        summary: {
+          ...summary,
+          timeline: {
+            ...summary.timeline,
+            duration: {
+              state: 'present',
+              detail: 'This suggests pneumonia.',
+            },
+          },
+        },
+      },
+      fallback,
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'unsafe_response',
+      fallback,
+      error: 'AI response violated output safety boundaries.',
     });
   });
 });

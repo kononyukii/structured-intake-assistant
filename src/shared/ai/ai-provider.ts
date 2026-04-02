@@ -5,6 +5,11 @@ import {
   validateFreeTextNormalizationOutput,
   validateSummaryRewriteOutput,
 } from '@/features/intake/domain/ai-json-contracts';
+import {
+  sanitizeClarifyingQuestionOutput,
+  sanitizeFreeTextNormalizationOutput,
+  sanitizeSummaryRewriteOutput,
+} from '@/features/safety/domain/output-safety';
 
 import type {
   AiOperationType,
@@ -111,6 +116,18 @@ function mapValidationFailureReason(
   }
 }
 
+function createUnsafeAiProviderFailure<T>(
+  fallback: T | null,
+  meta?: AiProviderMeta,
+): AiProviderResult<T> {
+  return createAiProviderFailure({
+    reason: 'unsafe_response',
+    fallback,
+    error: 'AI response violated output safety boundaries.',
+    meta,
+  });
+}
+
 export function validateAiProviderOutput(
   operation: 'clarifying_question_generation',
   candidate: unknown,
@@ -163,7 +180,13 @@ export function validateAiProviderOutput(
       const validationResult = validateClarifyingQuestionOutput(parsedCandidate);
 
       if (validationResult.ok) {
-        return createAiProviderSuccess(validationResult.data, meta);
+        const safetyResult = sanitizeClarifyingQuestionOutput(validationResult.data);
+
+        if (safetyResult.decision === 'blocked') {
+          return createUnsafeAiProviderFailure(fallback, meta);
+        }
+
+        return createAiProviderSuccess(safetyResult.data, meta);
       }
 
       return createAiProviderFailure({
@@ -177,7 +200,15 @@ export function validateAiProviderOutput(
       const validationResult = validateFreeTextNormalizationOutput(parsedCandidate);
 
       if (validationResult.ok) {
-        return createAiProviderSuccess(validationResult.data, meta);
+        const safetyResult = sanitizeFreeTextNormalizationOutput(
+          validationResult.data,
+        );
+
+        if (safetyResult.decision === 'blocked') {
+          return createUnsafeAiProviderFailure(fallback, meta);
+        }
+
+        return createAiProviderSuccess(safetyResult.data, meta);
       }
 
       return createAiProviderFailure({
@@ -191,7 +222,13 @@ export function validateAiProviderOutput(
       const validationResult = validateSummaryRewriteOutput(parsedCandidate);
 
       if (validationResult.ok) {
-        return createAiProviderSuccess(validationResult.data, meta);
+        const safetyResult = sanitizeSummaryRewriteOutput(validationResult.data);
+
+        if (safetyResult.decision === 'blocked') {
+          return createUnsafeAiProviderFailure(fallback, meta);
+        }
+
+        return createAiProviderSuccess(safetyResult.data, meta);
       }
 
       return createAiProviderFailure({

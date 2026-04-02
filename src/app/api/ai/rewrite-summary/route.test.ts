@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AiProvider } from '@/shared/ai/ai-provider';
+import {
+  createSummaryRewriteFallback,
+  validateAiProviderOutput,
+} from '@/shared/ai/ai-provider';
 import { MockAiProvider } from '@/shared/ai/mock-ai-provider';
 import { createDoctorSummaryFixture } from '@/test/fixtures/summary-fixtures';
 
@@ -125,6 +129,47 @@ describe('handleSummaryRewriteRoute', () => {
       }),
       {
         createProvider: () => new MockAiProvider({ mode: 'unsafe_response' }),
+      },
+    );
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      reason: 'unsafe_response',
+      error: 'AI response could not be used safely.',
+    });
+  });
+
+  it('maps blocked unsafe summary content into unsafe_response', async () => {
+    const summary = createDoctorSummaryFixture();
+    const response = await handleSummaryRewriteRoute(
+      createJsonRequest({
+        deterministicSummary: summary,
+        language: 'en',
+        style: 'neutral',
+      }),
+      {
+        createProvider: () =>
+          createProviderStub({
+            runSummaryRewrite: async () =>
+              validateAiProviderOutput(
+                'summary_rewrite',
+                {
+                  operation: 'summary_rewrite',
+                  summary: {
+                    ...summary,
+                    timeline: {
+                      ...summary.timeline,
+                      duration: {
+                        state: 'present',
+                        detail: 'This suggests pneumonia.',
+                      },
+                    },
+                  },
+                },
+                createSummaryRewriteFallback(summary),
+              ),
+          }),
       },
     );
 

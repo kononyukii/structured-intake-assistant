@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AiProvider } from '@/shared/ai/ai-provider';
+import { validateAiProviderOutput } from '@/shared/ai/ai-provider';
 import { MockAiProvider } from '@/shared/ai/mock-ai-provider';
 import { createSimpleIntakeSessionFixture } from '@/test/fixtures/intake-fixtures';
 
@@ -154,6 +155,42 @@ describe('handleClarifyingQuestionRoute', () => {
       ok: false,
       reason: 'provider_unavailable',
       error: 'AI provider is currently unavailable.',
+    });
+  });
+
+  it('maps unsafe clarifying-question content into unsafe_response', async () => {
+    const response = await handleClarifyingQuestionRoute(
+      createJsonRequest({
+        sessionSnapshot: createSimpleIntakeSessionFixture(),
+        currentPhase: 'timeline',
+        askedQuestionIds: [],
+      }),
+      {
+        createProvider: () =>
+          createProviderStub({
+            runClarifyingQuestion: async () =>
+              validateAiProviderOutput(
+                'clarifying_question_generation',
+                {
+                  operation: 'clarifying_question_generation',
+                  question: {
+                    id: 'unsafe-question',
+                    type: 'free_text',
+                    prompt: 'You should take ibuprofen.',
+                    multiline: true,
+                  },
+                },
+                null,
+              ),
+          }),
+      },
+    );
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      reason: 'unsafe_response',
+      error: 'AI response could not be used safely.',
     });
   });
 
