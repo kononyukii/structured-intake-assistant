@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AiProvider } from '@/shared/ai/ai-provider';
+import {
+  createFreeTextNormalizationFallback,
+  validateAiProviderOutput,
+} from '@/shared/ai/ai-provider';
 import { MockAiProvider } from '@/shared/ai/mock-ai-provider';
 
 import { handleFreeTextNormalizationRoute } from './route';
@@ -151,6 +155,44 @@ describe('handleFreeTextNormalizationRoute', () => {
       ok: false,
       reason: 'provider_unavailable',
       error: 'AI provider is currently unavailable.',
+    });
+  });
+
+  it('maps unsafe normalization content into unsafe_response', async () => {
+    const response = await handleFreeTextNormalizationRoute(
+      createJsonRequest({
+        rawText: 'Dry cough',
+        targetContext: 'chiefComplaint.summary',
+      }),
+      {
+        createProvider: () =>
+          createProviderStub({
+            runFreeTextNormalization: async () =>
+              validateAiProviderOutput(
+                'free_text_normalization',
+                {
+                  operation: 'free_text_normalization',
+                  normalizedFields: [
+                    {
+                      fieldPath: 'chiefComplaint.summary',
+                      value: {
+                        kind: 'value',
+                        value: 'This is likely pneumonia.',
+                      },
+                    },
+                  ],
+                },
+                createFreeTextNormalizationFallback(),
+              ),
+          }),
+      },
+    );
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      reason: 'unsafe_response',
+      error: 'AI response could not be used safely.',
     });
   });
 
