@@ -37,16 +37,21 @@ describe('buildDoctorSummary', () => {
       language: 'en',
       header: {
         title: 'Doctor Summary',
-        disclaimer: 'Patient-reported summary prepared to support discussion with a clinician.',
+        disclaimer:
+          'Patient-reported summary to support discussion with a clinician. It does not provide diagnosis, treatment recommendations, or urgency advice.',
       },
       complaint: {
         headline: 'Dry cough for 3 days',
-        detail: 'Location: Throat and upper chest; Severity: Mild; Quality: Dry and irritating',
+        detail:
+          'Location: Throat and upper chest; Severity: Mild; Quality: Dry and irritating',
       },
       timeline: {
         onset: { state: 'present', detail: '2026-02-26' },
         duration: { state: 'present', detail: '3 days' },
-        course: { state: 'present', detail: 'About the same overall, worse at night' },
+        course: {
+          state: 'present',
+          detail: 'About the same overall, worse at night',
+        },
       },
     });
   });
@@ -70,7 +75,10 @@ describe('buildDoctorSummary', () => {
       familyHistory: { state: 'not_assessed', items: [] },
     });
     expect(summary.medications).toEqual({ state: 'unknown', items: [] });
-    expect(summary.allergiesIntolerances).toEqual({ state: 'not_assessed', items: [] });
+    expect(summary.allergiesIntolerances).toEqual({
+      state: 'not_assessed',
+      items: [],
+    });
     expect(summary.questionsForDoctor).toEqual([
       {
         question: 'Clarify symptom details',
@@ -259,7 +267,16 @@ describe('buildDoctorSummary', () => {
     ];
 
     for (const summary of summaries) {
-      const outputText = JSON.stringify(summary).toLowerCase();
+      const outputText = JSON.stringify({
+        complaint: summary.complaint,
+        timeline: summary.timeline,
+        symptomFacts: summary.symptomFacts,
+        history: summary.history,
+        medications: summary.medications,
+        allergiesIntolerances: summary.allergiesIntolerances,
+        questionsForDoctor: summary.questionsForDoctor,
+        notes: summary.notes,
+      }).toLowerCase();
 
       expect(outputText).not.toContain('diagnosis');
       expect(outputText).not.toContain('treatment');
@@ -274,8 +291,15 @@ describe('buildDoctorSummary', () => {
     const session = createChaoticFreeTextIntakeSessionFixture();
 
     expect(buildSummary(session)).toEqual(buildSummary(session));
-    expect(buildSummary(session).symptomFacts.associatedSymptoms.map((item) => item.label)).toEqual(
-      ['Chest tightness', 'Nasal congestion', 'Sore throat', 'Wheezing'],
-    );
+    expect(
+      buildSummary(session).symptomFacts.associatedSymptoms.map(
+        (item) => item.label
+      )
+    ).toEqual([
+      'Chest tightness',
+      'Nasal congestion',
+      'Sore throat',
+      'Wheezing',
+    ]);
   });
 });
