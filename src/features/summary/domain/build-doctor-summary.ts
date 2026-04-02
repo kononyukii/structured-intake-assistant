@@ -21,10 +21,6 @@ type CollectionField<TItem> =
   | { kind: 'unknown' }
   | { kind: 'not_assessed' };
 
-const SUMMARY_TITLE = 'Doctor Summary';
-const SUMMARY_DISCLAIMER =
-  'Patient-reported summary prepared to support discussion with a clinician.';
-
 export function buildDoctorSummary(
   session: IntakeSession,
   options?: { language?: string; generatedAt?: string },
@@ -40,8 +36,8 @@ export function buildDoctorSummary(
     generatedAt: options?.generatedAt ?? new Date().toISOString(),
     ...(options?.language ? { language: options.language } : {}),
     header: {
-      title: SUMMARY_TITLE,
-      disclaimer: SUMMARY_DISCLAIMER,
+      title: baseSummary.header.title,
+      disclaimer: baseSummary.header.disclaimer,
     },
     complaint,
     timeline: {
@@ -60,9 +56,9 @@ export function buildDoctorSummary(
       familyHistory: mapTextFieldToCollectionSection(session.history.familyHistory),
     },
     medications: mapCollectionFieldToSummarySection(session.medications, (medication) => ({
-      label: medication.name,
-      ...toOptionalDetailProperty(medication.details),
-    })),
+        label: medication.name,
+        ...toOptionalDetailProperty(medication.details),
+      })),
     allergiesIntolerances: mapCollectionFieldToSummarySection(
       session.allergiesIntolerances,
       (allergy) => ({
@@ -245,7 +241,11 @@ function buildQuestionsForDoctor(session: IntakeSession): QuestionForDoctor[] {
     'Clarify systemic symptoms',
     collectUnresolvedFactLabels(session.systemicSymptoms),
   );
-  addQuestion(questions, 'Clarify red flags', collectUnresolvedFactLabels(session.redFlags));
+  addQuestion(
+    questions,
+    'Clarify red flags',
+    collectUnresolvedFactLabels(session.redFlags),
+  );
 
   return questions;
 }

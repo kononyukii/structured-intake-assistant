@@ -52,6 +52,10 @@ export function IntakeWizard() {
     goNext();
   };
 
+  const handlePreviewSummary = () => {
+    router.push('/summary');
+  };
+
   const handleSaveExit = () => {
     saveAndExit();
     router.push('/drafts');
@@ -211,6 +215,17 @@ export function IntakeWizard() {
               ) : (
                 renderQuestionInput()
               )}
+              {!isLoadingDraft && !currentQuestion ? (
+                <div className="mt-6">
+                  <Button
+                    type="button"
+                    className="h-11 bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={handlePreviewSummary}
+                  >
+                    {t('wizard.previewSummary')}
+                  </Button>
+                </div>
+              ) : null}
             </QuestionCard>
           </div>
         </WindowContent>
@@ -248,14 +263,25 @@ export function IntakeWizard() {
               >
                 {t('wizard.back')}
               </Button>
-              <Button
-                type="button"
-                className="h-11 w-full bg-blue-600 text-white hover:bg-blue-700 md:w-auto"
-                onClick={handleNext}
-                disabled={isLoadingDraft || !canGoNext}
-              >
-                {t('wizard.next')}
-              </Button>
+              {currentQuestion ? (
+                <Button
+                  type="button"
+                  className="h-11 w-full bg-blue-600 text-white hover:bg-blue-700 md:w-auto"
+                  onClick={handleNext}
+                  disabled={isLoadingDraft || !canGoNext}
+                >
+                  {t('wizard.next')}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  className="h-11 w-full bg-blue-600 text-white hover:bg-blue-700 md:w-auto"
+                  onClick={handlePreviewSummary}
+                  disabled={isLoadingDraft}
+                >
+                  {t('wizard.previewSummary')}
+                </Button>
+              )}
             </div>
           </div>
         </WindowFooter>
